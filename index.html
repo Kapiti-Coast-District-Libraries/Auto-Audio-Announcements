@@ -152,7 +152,17 @@
     <h2>Manual Audio Triggers</h2>
 
     <div class="button-grid" id="buttonGrid"></div>
-
+    <button
+  class="audio-btn"
+  onclick="stopAudio()"
+  style="
+    background:#dc2626;
+    margin-top:20px;
+    width:100%;
+  "
+>
+  STOP AUDIO
+</button>
   </div>
 
   <!-- CONFIG PAGE -->
@@ -319,27 +329,104 @@
       audioSelect.appendChild(option);
     });
 
-    // ==================================================
-    // PLAY AUDIO
-    // ==================================================
 
-    async function playAudio(url, label) {
+  // ==================================================
+  // GLOBAL AUDIO STATE
+  // ==================================================
 
-      try {
+  let currentAudio = null;
+  let currentAudioLabel = null;
 
-        const audio = new Audio(url);
+  // ==================================================
+  // STOP AUDIO FUNCTION
+  // ==================================================
 
-        await audio.play();
+  function stopAudio() {
 
-        statusEl.textContent = `Playing: ${label}`;
+    if (currentAudio) {
 
-      } catch (err) {
+      currentAudio.pause();
 
-        console.error(err);
+      currentAudio.currentTime = 0;
 
-        statusEl.textContent = `Failed to play: ${label}`;
-      }
+      currentAudio = null;
+
+      currentAudioLabel = null;
+
+      statusEl.textContent = "Audio stopped";
     }
+  }
+
+  // ==================================================
+  // PLAY AUDIO
+  // ==================================================
+
+  async function playAudio(url, label) {
+
+    try {
+
+      // ------------------------------------------
+      // PREVENT DUPLICATE SAME AUDIO
+      // ------------------------------------------
+
+      if (
+        currentAudio &&
+        currentAudioLabel === label &&
+        !currentAudio.paused
+      ) {
+        return;
+      }
+
+      // ------------------------------------------
+      // STOP CURRENT AUDIO
+      // ------------------------------------------
+      
+      stopAudio();
+      
+      // ------------------------------------------
+      // CREATE NEW AUDIO
+      // ------------------------------------------
+
+      currentAudio = new Audio(url);
+
+      currentAudioLabel = label;
+
+      currentAudio.preload = "auto";
+
+      // ------------------------------------------
+      // PLAY
+      // ------------------------------------------
+
+      await currentAudio.play();
+
+      statusEl.textContent = `Playing: ${label}`;
+
+      // ------------------------------------------
+      // CLEANUP WHEN FINISHED
+      // ------------------------------------------
+
+      currentAudio.onended = () => {
+
+        currentAudio = null;
+
+        currentAudioLabel = null;
+
+        statusEl.textContent =
+          "Playback finished";
+      };
+
+    } catch (err) {
+
+      console.error(err);
+
+      statusEl.textContent =
+        `Failed to play: ${label}`;
+
+      currentAudio = null;
+
+      currentAudioLabel = null;
+    }
+  }
 
     // ==================================================
     // SAVE SCHEDULE
