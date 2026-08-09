@@ -166,69 +166,26 @@
   </div>
 
   <!-- CONFIG PAGE -->
-  <div id="configPage" class="page"><h1>Schedule Configuration</h1>
+  <div id="configPage" class="page">
 
-<h3>
-  (AdHoc Audio, Will Only Last Until Page Refresh.
-  Contact Max to add permanent Audio)
-</h3>
+    <h1>Schedule Configuration</h1><br>
+    <h3>(AdHoc Audio, Will Only Last Until Page Refresh. Contact Max to add permanant Audio)</h3>
 
-<div class="config-card">
+    <div class="config-card">
 
-  <label for="scheduleTime">Time</label>
-  <input type="time" id="scheduleTime">
+      <label>Time</label>
+      <input type="time" id="scheduleTime" />
 
-  <label for="audioSelect">Select Audio</label>
-  <select id="audioSelect"></select>
+      <label>Select Audio</label>
+      <select id="audioSelect"></select>
 
-  <label>Days</label>
+      <button class="save-btn" onclick="saveSchedule()">
+        Save Schedule
+      </button>
 
-  <div class="day-selector">
+    </div>
 
-    <label>
-      <input type="checkbox" value="Monday" class="day-checkbox">
-      Mon
-    </label>
-
-    <label>
-      <input type="checkbox" value="Tuesday" class="day-checkbox">
-      Tue
-    </label>
-
-    <label>
-      <input type="checkbox" value="Wednesday" class="day-checkbox">
-      Wed
-    </label>
-
-    <label>
-      <input type="checkbox" value="Thursday" class="day-checkbox">
-      Thu
-    </label>
-
-    <label>
-      <input type="checkbox" value="Friday" class="day-checkbox">
-      Fri
-    </label>
-
-    <label>
-      <input type="checkbox" value="Saturday" class="day-checkbox">
-      Sat
-    </label>
-
-    <label>
-      <input type="checkbox" value="Sunday" class="day-checkbox">
-      Sun
-    </label>
-
-  </div>
-
-  <button class="save-btn" onclick="saveSchedule()">
-    Save Schedule
-  </button>
-
-</div>
-
-<div class="schedule-list" id="scheduleList"></div>
+    <div class="schedule-list" id="scheduleList"></div>
 
   </div>
 
@@ -331,7 +288,7 @@
       checkSchedules(currentTime);
     }
 
-    setInterval(checkSchedules, 1000);
+    setInterval(updateClock, 1000);
 
     updateClock();
 
@@ -476,121 +433,80 @@
     // SAVE SCHEDULE
     // ==================================================
 
-    let schedules = JSON.parse(localStorage.getItem("schedules")) || [];
+    function saveSchedule() {
 
-function saveSchedule() {
-  const time = document.getElementById("scheduleTime").value;
-  const audio = document.getElementById("audioSelect").value;
+      const time = document.getElementById("scheduleTime").value;
 
-  const days = Array.from(
-    document.querySelectorAll(".day-checkbox:checked")
-  ).map(checkbox => checkbox.value);
+      const audioIndex = document.getElementById("audioSelect").value;
 
-  if (!time) {
-    alert("Please select a time.");
-    return;
-  }
+      if (!time) {
+        alert("Please select a time");
+        return;
+      }
 
-  if (!audio) {
-    alert("Please select an audio file.");
-    return;
-  }
+      const selectedAudio = audioFiles[audioIndex];
 
-  if (days.length === 0) {
-    alert("Please select at least one day.");
-    return;
-  }
+      schedules.push({
+        time: time,
+        audio: selectedAudio,
+        played: false
+      });
 
-  const schedule = {
-    id: Date.now(),
-    time: time,
-    audio: audio,
-    days: days
-  };
+      renderSchedules();
+    }
 
-  schedules.push(schedule);
-
-  localStorage.setItem("schedules", JSON.stringify(schedules));
-
-  // Clear form
-  document.getElementById("scheduleTime").value = "";
-  document.getElementById("audioSelect").selectedIndex = 0;
-
-  document.querySelectorAll(".day-checkbox").forEach(cb => {
-    cb.checked = false;
-  });
-
-  renderSchedules();
-}
     // ==================================================
     // RENDER SCHEDULES
     // ==================================================
 
     function renderSchedules() {
-  const list = document.getElementById("scheduleList");
 
-  list.innerHTML = "";
+      const scheduleList = document.getElementById("scheduleList");
 
-  if (schedules.length === 0) {
-    list.innerHTML = "<p>No schedules configured.</p>";
-    return;
-  }
+      scheduleList.innerHTML = "";
 
-  schedules.forEach(schedule => {
-    const item = document.createElement("div");
+      schedules.forEach((schedule, index) => {
 
-    item.className = "schedule-item";
+        const div = document.createElement("div");
 
-    item.innerHTML = `
-      <div>
-        <strong>${schedule.time}</strong>
-        <div>${schedule.audio}</div>
-        <small>${schedule.days.join(", ")}</small>
-      </div>
+        div.className = "schedule-item";
 
-      <button onclick="deleteSchedule(${schedule.id})">
-        Delete
-      </button>
-    `;
+        div.innerHTML = `
+          <strong>${schedule.time}</strong>
+          <br>
+          ${schedule.audio.name}
+        `;
 
-    list.appendChild(item);
-  });
-}
+        scheduleList.appendChild(div);
+      });
+    }
 
-    function deleteSchedule(id) {
-  schedules = schedules.filter(schedule => schedule.id !== id);
-
-  localStorage.setItem("schedules", JSON.stringify(schedules));
-
-  renderSchedules();
-}
     // ==================================================
     // CHECK SCHEDULES
     // ==================================================
 
-    function checkSchedules() {
-  const now = new Date();
+    function checkSchedules(currentTime) {
 
-  const currentTime =
-    String(now.getHours()).padStart(2, "0") +
-    ":" +
-    String(now.getMinutes()).padStart(2, "0");
+      schedules.forEach(schedule => {
 
-  const currentDay = now.toLocaleDateString("en-US", {
-    weekday: "long"
-  });
+        // Reset played state after minute changes
+        if (currentTime !== schedule.time) {
+          schedule.played = false;
+        }
 
-  schedules.forEach(schedule => {
+        // Trigger audio
+        if (currentTime === schedule.time && !schedule.played) {
 
-    if (
-      schedule.time === currentTime &&
-      schedule.days.includes(currentDay)
-    ) {
-      playAudio(schedule.audio);
+          playAudio(
+            schedule.audio.url,
+            schedule.audio.name
+          );
+
+          schedule.played = true;
+        }
+      });
     }
 
-  });
-}
   </script>
 
 </body>
