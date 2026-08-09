@@ -45,7 +45,14 @@
     .clock {
       font-size: 4rem;
       color: #60a5fa;
+      margin-bottom: 0.5rem;
+    }
+
+    .day-display {
+      font-size: 1.5rem;
+      color: #9ca3af;
       margin-bottom: 1rem;
+      font-weight: bold;
     }
 
     .status {
@@ -94,16 +101,46 @@
       border-radius: 8px;
       border: none;
       font-size: 1rem;
+      box-sizing: border-box;
+    }
+
+    .days-picker {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .day-checkbox {
+      display: none;
+    }
+
+    .day-label {
+      background: #374151;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      user-select: none;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+
+    .day-checkbox:checked + .day-label {
+      background: #2563eb;
+      font-weight: bold;
     }
 
     .save-btn {
-      margin-top: 1rem;
+      margin-top: 1.5rem;
       background: #16a34a;
       border: none;
       padding: 12px 18px;
       border-radius: 8px;
       color: white;
       cursor: pointer;
+      font-size: 1rem;
+      width: 100%;
     }
 
     .save-btn:hover {
@@ -119,8 +156,24 @@
       padding: 1rem;
       border-radius: 8px;
       margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
+    .badge-container {
+      display: flex;
+      gap: 4px;
+      margin-top: 6px;
+    }
+
+    .badge {
+      background: #1f2937;
+      color: #60a5fa;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
   </style>
 </head>
 <body>
@@ -131,7 +184,7 @@
       Home
     </button>
 
-    <button class="nav-btn" onclick="showPage('configPage'), renderSchedules()">
+    <button class="nav-btn" onclick="showPage('configPage'); renderSchedules()">
       Config
     </button>
   </div>
@@ -141,9 +194,8 @@
 
     <h1>Audio Scheduler</h1>
 
-    <div class="clock" id="clock">
-      00:00:00
-    </div>
+    <div class="clock" id="clock">00:00:00</div>
+    <div class="day-display" id="dayDisplay">Sunday</div>
 
     <div class="status" id="status">
       Waiting for scheduled playback...
@@ -153,28 +205,52 @@
 
     <div class="button-grid" id="buttonGrid"></div>
     <button
-  class="audio-btn"
-  onclick="stopAudio()"
-  style="
-    background:#dc2626;
-    margin-top:20px;
-    width:100%;
-  "
->
-  STOP AUDIO
-</button>
+      class="audio-btn"
+      onclick="stopAudio()"
+      style="
+        background:#dc2626;
+        margin-top:20px;
+        width:100%;
+      "
+    >
+      STOP AUDIO
+    </button>
   </div>
 
   <!-- CONFIG PAGE -->
   <div id="configPage" class="page">
 
     <h1>Schedule Configuration</h1><br>
-    <h3>(AdHoc Audio, Will Only Last Until Page Refresh. Contact Max to add permanant Audio)</h3>
+    <h3>(AdHoc Audio, Will Only Last Until Page Refresh. Contact Max to add permanent Audio)</h3>
 
     <div class="config-card">
 
       <label>Time</label>
       <input type="time" id="scheduleTime" />
+
+      <label>Days of the Week</label>
+      <div class="days-picker" id="daysPicker">
+        <input type="checkbox" id="day-Sun" value="Sun" class="day-checkbox">
+        <label for="day-Sun" class="day-label">Sun</label>
+
+        <input type="checkbox" id="day-Mon" value="Mon" class="day-checkbox">
+        <label for="day-Mon" class="day-label">Mon</label>
+
+        <input type="checkbox" id="day-Tue" value="Tue" class="day-checkbox">
+        <label for="day-Tue" class="day-label">Tue</label>
+
+        <input type="checkbox" id="day-Wed" value="Wed" class="day-checkbox">
+        <label for="day-Wed" class="day-label">Wed</label>
+
+        <input type="checkbox" id="day-Thu" value="Thu" class="day-checkbox">
+        <label for="day-Thu" class="day-label">Thu</label>
+
+        <input type="checkbox" id="day-Fri" value="Fri" class="day-checkbox">
+        <label for="day-Fri" class="day-label">Fri</label>
+
+        <input type="checkbox" id="day-Sat" value="Sat" class="day-checkbox">
+        <label for="day-Sat" class="day-label">Sat</label>
+      </div>
 
       <label>Select Audio</label>
       <select id="audioSelect"></select>
@@ -196,60 +272,28 @@
     // ==================================================
 
     const audioFiles = [
-  {
-    name: "Bell 1",
-    url: "sounds/bell1.mp3"
-  },
-  {
-    name: "Bell 2",
-    url: "sounds/bell2.mp3"
-  },
-  {
-    name: "Bell 3",
-    url: "sounds/bell3.mp3"
-  },
-  {
-    name: "Bell 4",
-    url: "sounds/bell4.mp3"
-  },
-  {
-    name: "Bell 5",
-    url: "sounds/bell5.mp3"
-  },
-  {
-    name: "Bell 6",
-    url: "sounds/bell6.mp3"
-  },
-  {
-    name: "Bell 7",
-    url: "sounds/bell7.mp3"
-  },
-  {
-    name: "Bell 8",
-    url: "sounds/bell8.mp3"
-  },
-  {
-    name: "Bell 9",
-    url: "sounds/bell9.mp3"
-  },
-  {
-    name: "Bell 10",
-    url: "sounds/bell10.mp3"
-  },
-  {
-    name: "Bell 11",
-    url: "sounds/bell11.mp3"
-  },
-  {
-    name: "Bell 12",
-    url: "sounds/bell12.mp3"
-  }
-];
+      { name: "Bell 1", url: "sounds/bell1.mp3" },
+      { name: "Bell 2", url: "sounds/bell2.mp3" },
+      { name: "Bell 3", url: "sounds/bell3.mp3" },
+      { name: "Bell 4", url: "sounds/bell4.mp3" },
+      { name: "Bell 5", url: "sounds/bell5.mp3" },
+      { name: "Bell 6", url: "sounds/bell6.mp3" },
+      { name: "Bell 7", url: "sounds/bell7.mp3" },
+      { name: "Bell 8", url: "sounds/bell8.mp3" },
+      { name: "Bell 9", url: "sounds/bell9.mp3" },
+      { name: "Bell 10", url: "sounds/bell10.mp3" },
+      { name: "Bell 11", url: "sounds/bell11.mp3" },
+      { name: "Bell 12", url: "sounds/bell12.mp3" }
+    ];
+
+    const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
     // ==================================================
     // STATE
     // ==================================================
 
+    // JSON structure now contains days array:
+    // [{ time: "08:00", days: ["Mon", "Wed"], audio: {...}, played: false }]
     let schedules = [];
 
     // ==================================================
@@ -257,11 +301,9 @@
     // ==================================================
 
     function showPage(pageId) {
-
       document.querySelectorAll(".page").forEach(page => {
         page.classList.remove("active");
       });
-
       document.getElementById(pageId).classList.add("active");
     }
 
@@ -270,10 +312,10 @@
     // ==================================================
 
     const clockEl = document.getElementById("clock");
+    const dayDisplayEl = document.getElementById("dayDisplay");
     const statusEl = document.getElementById("status");
 
     function updateClock() {
-
       const now = new Date();
 
       const hours = String(now.getHours()).padStart(2, "0");
@@ -282,14 +324,15 @@
 
       const currentTime = `${hours}:${minutes}`;
       const displayTime = `${hours}:${minutes}:${seconds}`;
+      const currentDay = DAYS[now.getDay()];
 
       clockEl.textContent = displayTime;
+      dayDisplayEl.textContent = now.toLocaleDateString('en-US', { weekday: 'long' });
 
-      checkSchedules(currentTime);
+      checkSchedules(currentTime, currentDay);
     }
 
     setInterval(updateClock, 1000);
-
     updateClock();
 
     // ==================================================
@@ -299,17 +342,12 @@
     const buttonGrid = document.getElementById("buttonGrid");
 
     audioFiles.forEach(audioData => {
-
       const button = document.createElement("button");
-
       button.className = "audio-btn";
-
       button.textContent = audioData.name;
-
       button.addEventListener("click", () => {
         playAudio(audioData.url, audioData.name);
       });
-
       buttonGrid.appendChild(button);
     });
 
@@ -320,127 +358,87 @@
     const audioSelect = document.getElementById("audioSelect");
 
     audioFiles.forEach((audio, index) => {
-
       const option = document.createElement("option");
-
       option.value = index;
-
       option.textContent = audio.name;
-
       audioSelect.appendChild(option);
     });
 
+    // ==================================================
+    // GLOBAL AUDIO STATE
+    // ==================================================
 
-  // ==================================================
-  // GLOBAL AUDIO STATE
-  // ==================================================
+    let currentAudio = null;
+    let currentAudioLabel = null;
 
-  let currentAudio = null;
-  let currentAudioLabel = null;
+    // ==================================================
+    // STOP AUDIO FUNCTION
+    // ==================================================
 
-  // ==================================================
-  // STOP AUDIO FUNCTION
-  // ==================================================
-
-  function stopAudio() {
-
-    if (currentAudio) {
-
-      currentAudio.pause();
-
-      currentAudio.currentTime = 0;
-
-      currentAudio = null;
-
-      currentAudioLabel = null;
-
-      statusEl.textContent = "Audio stopped";
-    }
-  }
-
-  // ==================================================
-  // PLAY AUDIO
-  // ==================================================
-
-  async function playAudio(url, label) {
-
-    try {
-
-      // ------------------------------------------
-      // PREVENT DUPLICATE SAME AUDIO
-      // ------------------------------------------
-
-      if (
-        currentAudio &&
-        currentAudioLabel === label &&
-        !currentAudio.paused
-      ) {
-        return;
-      }
-
-      // ------------------------------------------
-      // STOP CURRENT AUDIO
-      // ------------------------------------------
-      
-      stopAudio();
-      
-      // ------------------------------------------
-      // CREATE NEW AUDIO
-      // ------------------------------------------
-
-      currentAudio = new Audio(url);
-
-      currentAudioLabel = label;
-
-      currentAudio.preload = "auto";
-
-      // ------------------------------------------
-      // PLAY
-      // ------------------------------------------
-
-      await currentAudio.play();
-
-      statusEl.textContent = `Playing: ${label}`;
-
-      // ------------------------------------------
-      // CLEANUP WHEN FINISHED
-      // ------------------------------------------
-
-      currentAudio.onended = () => {
-
+    function stopAudio() {
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
         currentAudio = null;
-
         currentAudioLabel = null;
-
-        statusEl.textContent =
-          "Playback finished";
-      };
-
-    } catch (err) {
-
-      console.error(err);
-
-      statusEl.textContent =
-        `Failed to play: ${label}`;
-
-      currentAudio = null;
-
-      currentAudioLabel = null;
+        statusEl.textContent = "Audio stopped";
+      }
     }
-  }
+
+    // ==================================================
+    // PLAY AUDIO
+    // ==================================================
+
+    async function playAudio(url, label) {
+      try {
+        if (
+          currentAudio &&
+          currentAudioLabel === label &&
+          !currentAudio.paused
+        ) {
+          return;
+        }
+
+        stopAudio();
+
+        currentAudio = new Audio(url);
+        currentAudioLabel = label;
+        currentAudio.preload = "auto";
+
+        await currentAudio.play();
+        statusEl.textContent = `Playing: ${label}`;
+
+        currentAudio.onended = () => {
+          currentAudio = null;
+          currentAudioLabel = null;
+          statusEl.textContent = "Playback finished";
+        };
+      } catch (err) {
+        console.error(err);
+        statusEl.textContent = `Failed to play: ${label}`;
+        currentAudio = null;
+        currentAudioLabel = null;
+      }
+    }
 
     // ==================================================
     // SAVE SCHEDULE
     // ==================================================
 
     function saveSchedule() {
-
       const time = document.getElementById("scheduleTime").value;
-
       const audioIndex = document.getElementById("audioSelect").value;
+
+      const selectedDays = Array.from(document.querySelectorAll("#daysPicker .day-checkbox:checked"))
+        .map(cb => cb.value);
 
       if (!time) {
         alert("Please select a time");
+        return;
+      }
+
+      if (selectedDays.length === 0) {
+        alert("Please select at least one day of the week");
         return;
       }
 
@@ -448,9 +446,14 @@
 
       schedules.push({
         time: time,
+        days: selectedDays,
         audio: selectedAudio,
         played: false
       });
+
+      // Clear selection UI
+      document.querySelectorAll("#daysPicker .day-checkbox").forEach(cb => cb.checked = false);
+      document.getElementById("scheduleTime").value = "";
 
       renderSchedules();
     }
@@ -460,21 +463,20 @@
     // ==================================================
 
     function renderSchedules() {
-
       const scheduleList = document.getElementById("scheduleList");
-
       scheduleList.innerHTML = "";
 
-      schedules.forEach((schedule, index) => {
-
+      schedules.forEach((schedule) => {
         const div = document.createElement("div");
-
         div.className = "schedule-item";
 
+        const dayBadges = schedule.days.map(d => `<span class="badge">${d}</span>`).join(" ");
+
         div.innerHTML = `
-          <strong>${schedule.time}</strong>
-          <br>
-          ${schedule.audio.name}
+          <div>
+            <strong>${schedule.time}</strong> — ${schedule.audio.name}
+            <div class="badge-container">${dayBadges}</div>
+          </div>
         `;
 
         scheduleList.appendChild(div);
@@ -485,29 +487,25 @@
     // CHECK SCHEDULES
     // ==================================================
 
-    function checkSchedules(currentTime) {
-
+    function checkSchedules(currentTime, currentDay) {
       schedules.forEach(schedule => {
-
-        // Reset played state after minute changes
+        // Reset played state when the minute shifts away from scheduled time
         if (currentTime !== schedule.time) {
           schedule.played = false;
         }
 
-        // Trigger audio
-        if (currentTime === schedule.time && !schedule.played) {
-
-          playAudio(
-            schedule.audio.url,
-            schedule.audio.name
-          );
-
+        // Trigger audio if time AND active day match
+        if (
+          currentTime === schedule.time &&
+          schedule.days.includes(currentDay) &&
+          !schedule.played
+        ) {
+          playAudio(schedule.audio.url, schedule.audio.name);
           schedule.played = true;
         }
       });
     }
 
   </script>
-
 </body>
 </html>
