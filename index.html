@@ -42,6 +42,35 @@
       display: block;
     }
 
+    /* ==================================================
+       LAYOUT & HOME PAGE SPECIFIC
+       ================================================== */
+    
+    .main-content-wrapper {
+      display: flex;
+      gap: 2rem;
+      align-items: flex-start;
+    }
+
+    .left-column {
+      flex: 0 0 65%; /* Take 65% width */
+    }
+
+    .right-column {
+      flex: 0 0 calc(35% - 2rem); /* Take remaining 35% minus gap */
+      background: #1f2937;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-sizing: border-box;
+    }
+
+    h2.column-header {
+      margin-top: 0;
+      border-bottom: 2px solid #374151;
+      padding-bottom: 0.5rem;
+      color: #e5e7eb;
+    }
+
     .clock {
       font-size: 4rem;
       color: #60a5fa;
@@ -57,16 +86,21 @@
 
     .status {
       margin-top: 1rem;
-      color: #9ca3af;
+      color: #a78bfa; /* Slightly purpler to stand out as status */
       min-height: 24px;
+      font-weight: bold;
     }
 
     .button-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 12px;
-      margin-top: 2rem;
+      margin-top: 1rem;
     }
+
+    /* ==================================================
+       SHARED COMPONENTS (Buttons, Cards, Items)
+       ================================================== */
 
     .audio-btn {
       padding: 14px;
@@ -102,6 +136,10 @@
       border: none;
       font-size: 1rem;
       box-sizing: border-box;
+    }
+
+    input[type="time"] {
+      cursor: pointer;
     }
 
     .days-picker {
@@ -148,7 +186,7 @@
     }
 
     .schedule-list {
-      margin-top: 2rem;
+      margin-top: 1rem;
     }
 
     .schedule-item {
@@ -159,12 +197,19 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      border-left: 4px solid transparent;
+    }
+
+    /* Highlight next upcoming schedule vaguely */
+    .schedule-item.upcoming {
+      border-left-color: #60a5fa;
     }
 
     .badge-container {
       display: flex;
       gap: 4px;
       margin-top: 6px;
+      flex-wrap: wrap;
     }
 
     .badge {
@@ -174,6 +219,15 @@
       border-radius: 4px;
       font-size: 0.8rem;
     }
+
+    /* Helper for empty lists */
+    .no-schedules {
+      color: #9ca3af;
+      font-style: italic;
+      text-align: center;
+      margin-top: 2rem;
+    }
+
   </style>
 </head>
 <body>
@@ -184,49 +238,66 @@
       Home
     </button>
 
-    <button class="nav-btn" onclick="showPage('configPage'); renderSchedules()">
+    <button class="nav-btn" onclick="showPage('configPage'); renderConfigSchedules()">
       Config
     </button>
   </div>
 
   <!-- HOME PAGE -->
   <div id="homePage" class="page active">
+    
+    <div class="main-content-wrapper">
+      
+      <!-- LEFT COLUMN: Clock & Buttons (65%) -->
+      <div class="left-column">
+        <h1>Audio Scheduler</h1>
 
-    <h1>Audio Scheduler</h1>
+        <div class="clock" id="clock">00:00:00</div>
+        <div class="day-display" id="dayDisplay">...</div>
 
-    <div class="clock" id="clock">00:00:00</div>
-    <div class="day-display" id="dayDisplay">Sunday</div>
+        <div class="status" id="status">
+          Waiting for scheduled playback...
+        </div>
 
-    <div class="status" id="status">
-      Waiting for scheduled playback...
-    </div>
+        <h2 style="margin-top: 2rem;">Manual Audio Triggers</h2>
+        <div class="button-grid" id="buttonGrid"></div>
+        
+        <button
+          class="audio-btn"
+          onclick="stopAudio()"
+          style="
+            background:#dc2626;
+            margin-top:20px;
+            width:100%;
+            font-weight: bold;
+          "
+        >
+          STOP AUDIO
+        </button>
+      </div>
 
-    <h2>Manual Audio Triggers</h2>
+      <!-- RIGHT COLUMN: Today's Schedule (35%) -->
+      <div class="right-column">
+        <h2 class="column-header">Today's Schedule</h2>
+        <div class="schedule-list" id="homeScheduleList">
+          <!-- Populated by JS -->
+        </div>
+      </div>
 
-    <div class="button-grid" id="buttonGrid"></div>
-    <button
-      class="audio-btn"
-      onclick="stopAudio()"
-      style="
-        background:#dc2626;
-        margin-top:20px;
-        width:100%;
-      "
-    >
-      STOP AUDIO
-    </button>
+    </div><!-- end main-content-wrapper -->
+
   </div>
 
   <!-- CONFIG PAGE -->
   <div id="configPage" class="page">
 
     <h1>Schedule Configuration</h1><br>
-    <h3>(AdHoc Audio, Will Only Last Until Page Refresh. Contact Max to add permanent Audio)</h3>
+    <h3>(AdHoc Audio, Will Only Last Until Page Refresh.)</h3>
 
     <div class="config-card">
 
-      <label>Time</label>
-      <input type="time" id="scheduleTime" onclick="this.showPicker()"/>
+      <label for="scheduleTime">Time</label>
+      <input type="time" id="scheduleTime" onclick="this.showPicker()" />
 
       <label>Days of the Week</label>
       <div class="days-picker" id="daysPicker">
@@ -261,14 +332,15 @@
 
     </div>
 
-    <div class="schedule-list" id="scheduleList"></div>
+    <h2>Master Schedule List (All Days)</h2>
+    <div class="schedule-list" id="configScheduleList"></div>
 
   </div>
 
   <script>
 
     // ==================================================
-    // AUDIO FILES
+    // AUDIO FILES & CONSTANTS
     // ==================================================
 
     const audioFiles = [
@@ -286,22 +358,13 @@
       { name: "Bell 12", url: "sounds/bell12.mp3" }
     ];
 
-    const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const DAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
     // ==================================================
     // STATE
     // ==================================================
 
-    // JSON structure now contains days array:
-    // [{ time: "08:00", days: ["Mon", "Wed"], audio: {...}, played: false }]
-    let schedules = [
-  {
-    time: "17:00",
-    days: ["Mon", "Tue", "Wed", "Thu", "Fri"],
-    audio: { name: "Bell 2", url: "sounds/bell2.mp3" },
-    played: false
-  }
-];
+    let schedules = [];
 
     // ==================================================
     // PAGE NAVIGATION
@@ -315,7 +378,7 @@
     }
 
     // ==================================================
-    // CLOCK
+    // CLOCK & MAIN LOOP
     // ==================================================
 
     const clockEl = document.getElementById("clock");
@@ -329,25 +392,31 @@
       const minutes = String(now.getMinutes()).padStart(2, "0");
       const seconds = String(now.getSeconds()).padStart(2, "0");
 
-      const currentTime = `${hours}:${minutes}`;
-      const displayTime = `${hours}:${minutes}:${seconds}`;
-      const currentDay = DAYS[now.getDay()];
+      const currentTimeString = `${hours}:${minutes}`; // "HH:MM"
+      const displayTimeString = `${hours}:${minutes}:${seconds}`;
+      const currentDayShort = DAYS_SHORT[now.getDay()]; // "Mon"
 
-      clockEl.textContent = displayTime;
+      // 1. Update Display
+      clockEl.textContent = displayTimeString;
       dayDisplayEl.textContent = now.toLocaleDateString('en-US', { weekday: 'long' });
 
-      checkSchedules(currentTime, currentDay);
+      // 2. Core Logic: Check if something needs to play
+      checkSchedules(currentTimeString, currentDayShort);
+
+      // 3. Display Logic: Update the Home Page schedule list (so it stays current if day changes)
+      renderHomePageSchedule(currentDayShort, currentTimeString);
     }
 
+    // Start the loop
     setInterval(updateClock, 1000);
-    updateClock();
+    updateClock(); // Run immediately
 
     // ==================================================
-    // MANUAL BUTTONS
+    // MANUAL UI POPULATION
     // ==================================================
 
+    // 1. Manual Buttons
     const buttonGrid = document.getElementById("buttonGrid");
-
     audioFiles.forEach(audioData => {
       const button = document.createElement("button");
       button.className = "audio-btn";
@@ -358,12 +427,8 @@
       buttonGrid.appendChild(button);
     });
 
-    // ==================================================
-    // AUDIO SELECT
-    // ==================================================
-
+    // 2. Config Audio Select
     const audioSelect = document.getElementById("audioSelect");
-
     audioFiles.forEach((audio, index) => {
       const option = document.createElement("option");
       option.value = index;
@@ -372,15 +437,11 @@
     });
 
     // ==================================================
-    // GLOBAL AUDIO STATE
+    // AUDIO PLAYBACK ENGINE
     // ==================================================
 
     let currentAudio = null;
     let currentAudioLabel = null;
-
-    // ==================================================
-    // STOP AUDIO FUNCTION
-    // ==================================================
 
     function stopAudio() {
       if (currentAudio) {
@@ -388,25 +449,18 @@
         currentAudio.currentTime = 0;
         currentAudio = null;
         currentAudioLabel = null;
-        statusEl.textContent = "Audio stopped";
+        statusEl.textContent = "Audio stopped manually.";
       }
     }
 
-    // ==================================================
-    // PLAY AUDIO
-    // ==================================================
-
     async function playAudio(url, label) {
       try {
-        if (
-          currentAudio &&
-          currentAudioLabel === label &&
-          !currentAudio.paused
-        ) {
+        // Prevent interrupting the same file if it's already playing
+        if (currentAudio && currentAudioLabel === label && !currentAudio.paused) {
           return;
         }
 
-        stopAudio();
+        stopAudio(); // Stop whatever is currently playing
 
         currentAudio = new Audio(url);
         currentAudioLabel = label;
@@ -418,34 +472,59 @@
         currentAudio.onended = () => {
           currentAudio = null;
           currentAudioLabel = null;
-          statusEl.textContent = "Playback finished";
+          statusEl.textContent = "Playback finished.";
         };
       } catch (err) {
-        console.error(err);
-        statusEl.textContent = `Failed to play: ${label}`;
+        console.error("Audio playback error:", err);
+        statusEl.textContent = `Error playing: ${label}`;
         currentAudio = null;
         currentAudioLabel = null;
       }
     }
 
     // ==================================================
-    // SAVE SCHEDULE
+    // SCHEDULE CORE LOGIC
+    // ==================================================
+
+    function checkSchedules(currentTime, currentDay) {
+      schedules.forEach(schedule => {
+        // Reset flag if time passed
+        if (currentTime !== schedule.time) {
+          schedule.played = false;
+        }
+
+        // Trigger if day matches, time matches, and hasn't played yet this minute
+        if (
+          currentTime === schedule.time &&
+          schedule.days.includes(currentDay) &&
+          !schedule.played
+        ) {
+          playAudio(schedule.audio.url, schedule.audio.name);
+          schedule.played = true; // Set flag
+        }
+      });
+    }
+
+    // ==================================================
+    // CONFIGURATION PAGE ACTIONS & RENDERING
     // ==================================================
 
     function saveSchedule() {
-      const time = document.getElementById("scheduleTime").value;
+      const timeInput = document.getElementById("scheduleTime");
+      const time = timeInput.value;
       const audioIndex = document.getElementById("audioSelect").value;
+      const daysPicker = document.getElementById("daysPicker");
 
-      const selectedDays = Array.from(document.querySelectorAll("#daysPicker .day-checkbox:checked"))
+      const selectedDays = Array.from(daysPicker.querySelectorAll(".day-checkbox:checked"))
         .map(cb => cb.value);
 
       if (!time) {
-        alert("Please select a time");
+        alert("Please select a time.");
         return;
       }
 
       if (selectedDays.length === 0) {
-        alert("Please select at least one day of the week");
+        alert("Please select at least one day.");
         return;
       }
 
@@ -455,23 +534,28 @@
         time: time,
         days: selectedDays,
         audio: selectedAudio,
-        played: false
+        played: false // internal flag
       });
 
-      // Clear selection UI
-      document.querySelectorAll("#daysPicker .day-checkbox").forEach(cb => cb.checked = false);
-      document.getElementById("scheduleTime").value = "";
+      // Sort schedules by time automatically
+      schedules.sort((a, b) => a.time.localeCompare(b.time));
 
-      renderSchedules();
+      // Clear UI
+      daysPicker.querySelectorAll(".day-checkbox").forEach(cb => cb.checked = false);
+      timeInput.value = "";
+
+      renderConfigSchedules();
     }
 
-    // ==================================================
-    // RENDER SCHEDULES
-    // ==================================================
-
-    function renderSchedules() {
-      const scheduleList = document.getElementById("scheduleList");
+    // Renders EVERYTHING (Config page)
+    function renderConfigSchedules() {
+      const scheduleList = document.getElementById("configScheduleList");
       scheduleList.innerHTML = "";
+
+      if (schedules.length === 0) {
+        scheduleList.innerHTML = '<div class="no-schedules">No schedules set.</div>';
+        return;
+      }
 
       schedules.forEach((schedule) => {
         const div = document.createElement("div");
@@ -485,31 +569,54 @@
             <div class="badge-container">${dayBadges}</div>
           </div>
         `;
-
         scheduleList.appendChild(div);
       });
     }
 
     // ==================================================
-    // CHECK SCHEDULES
+    // HOME PAGE DISPLAY LOGIC
     // ==================================================
 
-    function checkSchedules(currentTime, currentDay) {
-      schedules.forEach(schedule => {
-        // Reset played state when the minute shifts away from scheduled time
-        if (currentTime !== schedule.time) {
-          schedule.played = false;
+    // Renders ONLY today's schedules (Home page right column)
+    function renderHomePageSchedule(currentDayShort, currentTime) {
+      const homeList = document.getElementById("homeScheduleList");
+      
+      // Filter the master list for things happening TODAY
+      const todaysSchedules = schedules.filter(s => s.days.includes(currentDayShort));
+
+      // Quick performance optimization: don't redraw if nothing changed (vaguely)
+      // This function runs every second. We only need to rebuild the HTML if the count changed,
+      // or if we cross a minute boundary where an item might change visual state (e.g., 'upcoming')
+      if (homeList.dataset.lastCount == todaysSchedules.length && homeList.dataset.lastTime === currentTime) {
+         return; 
+      }
+      homeList.dataset.lastCount = todaysSchedules.length;
+      homeList.dataset.lastTime = currentTime;
+
+      homeList.innerHTML = "";
+
+      if (todaysSchedules.length === 0) {
+        homeList.innerHTML = '<div class="no-schedules">No audio scheduled for today.</div>';
+        return;
+      }
+
+      todaysSchedules.forEach((schedule) => {
+        const div = document.createElement("div");
+        // We use a simpler style for the home page sidebar
+        div.className = "schedule-item"; 
+        
+        // Vaguely highlight upcoming ones (after current time)
+        if (schedule.time > currentTime) {
+            div.classList.add('upcoming');
         }
 
-        // Trigger audio if time AND active day match
-        if (
-          currentTime === schedule.time &&
-          schedule.days.includes(currentDay) &&
-          !schedule.played
-        ) {
-          playAudio(schedule.audio.url, schedule.audio.name);
-          schedule.played = true;
-        }
+        div.innerHTML = `
+          <div>
+            <strong>${schedule.time}</strong><br>
+            <span style="color: #d1d5db; font-size: 0.9rem;">${schedule.audio.name}</span>
+          </div>
+        `;
+        homeList.appendChild(div);
       });
     }
 
