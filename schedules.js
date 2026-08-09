@@ -9,13 +9,13 @@ const schedules = [
   {
     time: "12:00",
     days: ["Mon", "Wed", "Fri"],
-    audio: { name: "Bell 5", url: "sounds/bell5.mp3" },
+    audio: { name: "Bell 5", url: "sounds/bell2.mp3" },
     played: false
   },
   {
     time: "17:00",
     days: ["Tue", "Thu"],
-    audio: { name: "Bell 12", url: "sounds/bell12.mp3" },
+    audio: { name: "Bell 12", url: "sounds/bell2.mp3" },
     played: false
   }
 ];
