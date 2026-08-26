@@ -41,7 +41,40 @@
     .active {
       display: block;
     }
+/* ==================================================
+   CLICK TO CONTINUE OVERLAY
+   ================================================== */
 
+#clickOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(0, 0, 0, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#clickContinueButton {
+  width: min(80vw, 600px);
+  height: min(40vh, 300px);
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 0 40px rgba(220, 38, 38, 0.6);
+}
+
+#clickContinueButton:hover {
+  background: #b91c1c;
+}
+
+#clickContinueButton:active {
+  background: #991b1b;
+}
     /* ==================================================
        LAYOUT & HOME PAGE SPECIFIC
        ================================================== */
@@ -232,7 +265,20 @@
 </head>
 <script src="schedules.js"></script>
 <body>
+<!-- CLICK TO CONTINUE OVERLAY -->
+<div id="clickOverlay">
+  <button id="clickContinueButton">
+    Click anywhere to continue
+  </button>
+</div>
 
+<script>
+  const clickOverlay = document.getElementById("clickOverlay");
+
+  clickOverlay.addEventListener("click", () => {
+    clickOverlay.remove();
+  });
+</script>
   <!-- NAVIGATION -->
   <div class="navbar">
     <button class="nav-btn" onclick="showPage('homePage')">
