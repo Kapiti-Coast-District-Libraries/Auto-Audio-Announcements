@@ -481,30 +481,24 @@
 // SCHEDULE CORE LOGIC
 // ==================================================
 
-function checkSchedules(now) {
+function checkSchedules(currentTime, currentDay) {
+  const now = new Date();
+
   schedules.forEach(schedule => {
 
-    // Build today's date/time for this schedule
-    const scheduledTime = new Date(now);
-
-    const [hours, minutes] = schedule.time.split(":").map(Number);
-
-    scheduledTime.setHours(hours, minutes, 0, 0);
-
-    const currentDay = DAYS_SHORT[now.getDay()];
-
-    // Schedule must be active today
+    // Only consider schedules that run today
     if (!schedule.days.includes(currentDay)) {
       return;
     }
 
-    // Create a unique identifier for THIS occurrence.
-    //
-    // Example:
-    // 2026-08-27 + 10:00
-    //
-    // This means the same schedule can play again tomorrow,
-    // but cannot accidentally play twice today.
+    // Build the scheduled time for today
+    const scheduledTime = new Date(now);
+    const [hours, minutes] = schedule.time.split(":").map(Number);
+
+    scheduledTime.setHours(hours, minutes, 0, 0);
+
+    // Unique ID for this specific occurrence
+    // Example: "2026-08-27_10:00"
     const occurrenceId =
       `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}_${schedule.time}`;
 
@@ -513,27 +507,22 @@ function checkSchedules(now) {
       return;
     }
 
-    // Has the scheduled time arrived?
+    // If the scheduled time has arrived, play it.
     //
-    // This is the important part.
+    // This is the important change:
+    // We no longer require currentTime === schedule.time.
     //
-    // If Chrome throttles the background tab and this function
-    // doesn't execute until AFTER the scheduled time, this will
-    // still be true.
+    // If Chrome delays the background tab and this function runs
+    // at 10:00:20 instead of 10:00:00, the schedule will still play.
     if (now >= scheduledTime) {
-
-      console.log(
-        `Playing overdue/current schedule: ${schedule.time} - ${schedule.audio.name}`
-      );
 
       playAudio(schedule.audio.url, schedule.audio.name);
 
-      // Mark THIS specific day's occurrence as played
+      // Remember that this occurrence has already played
       schedule.lastPlayedOccurrence = occurrenceId;
     }
   });
-}
-    // ==================================================
+}    // ==================================================
     // CONFIGURATION PAGE ACTIONS & RENDERING
     // ==================================================
 
