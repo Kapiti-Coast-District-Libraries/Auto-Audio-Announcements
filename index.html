@@ -477,29 +477,62 @@
       }
     }
 
-    // ==================================================
-    // SCHEDULE CORE LOGIC
-    // ==================================================
+// ==================================================
+// SCHEDULE CORE LOGIC
+// ==================================================
 
-    function checkSchedules(currentTime, currentDay) {
-      schedules.forEach(schedule => {
-        // Reset flag if time passed
-        if (currentTime !== schedule.time) {
-          schedule.played = false;
-        }
+function checkSchedules(now) {
+  schedules.forEach(schedule => {
 
-        // Trigger if day matches, time matches, and hasn't played yet this minute
-        if (
-          currentTime === schedule.time &&
-          schedule.days.includes(currentDay) &&
-          !schedule.played
-        ) {
-          playAudio(schedule.audio.url, schedule.audio.name);
-          schedule.played = true; // Set flag
-        }
-      });
+    // Build today's date/time for this schedule
+    const scheduledTime = new Date(now);
+
+    const [hours, minutes] = schedule.time.split(":").map(Number);
+
+    scheduledTime.setHours(hours, minutes, 0, 0);
+
+    const currentDay = DAYS_SHORT[now.getDay()];
+
+    // Schedule must be active today
+    if (!schedule.days.includes(currentDay)) {
+      return;
     }
 
+    // Create a unique identifier for THIS occurrence.
+    //
+    // Example:
+    // 2026-08-27 + 10:00
+    //
+    // This means the same schedule can play again tomorrow,
+    // but cannot accidentally play twice today.
+    const occurrenceId =
+      `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}_${schedule.time}`;
+
+    // Already played this occurrence
+    if (schedule.lastPlayedOccurrence === occurrenceId) {
+      return;
+    }
+
+    // Has the scheduled time arrived?
+    //
+    // This is the important part.
+    //
+    // If Chrome throttles the background tab and this function
+    // doesn't execute until AFTER the scheduled time, this will
+    // still be true.
+    if (now >= scheduledTime) {
+
+      console.log(
+        `Playing overdue/current schedule: ${schedule.time} - ${schedule.audio.name}`
+      );
+
+      playAudio(schedule.audio.url, schedule.audio.name);
+
+      // Mark THIS specific day's occurrence as played
+      schedule.lastPlayedOccurrence = occurrenceId;
+    }
+  });
+}
     // ==================================================
     // CONFIGURATION PAGE ACTIONS & RENDERING
     // ==================================================
