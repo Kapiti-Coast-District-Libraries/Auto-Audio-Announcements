@@ -424,8 +424,11 @@
     const statusEl = document.getElementById("status");
 
     function updateClock() {
+    let currentAudio = null;
       const now = new Date();
-
+      currentAudio = new Audio("sounds/silence.mp3");
+      currentAudio.play();
+      console.log("AudioPlayed");
       const hours = String(now.getHours()).padStart(2, "0");
       const minutes = String(now.getMinutes()).padStart(2, "0");
       const seconds = String(now.getSeconds()).padStart(2, "0");
