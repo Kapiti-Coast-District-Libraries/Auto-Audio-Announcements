@@ -41,44 +41,40 @@
     .active {
       display: block;
     }
-/* ==================================================
-   CLICK TO CONTINUE OVERLAY
-   ================================================== */
 
-#clickOverlay {
-  position: fixed;
-  inset: 0;
-  z-index: 99999;
-  background: rgba(0, 0, 0, 0.92);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+    /* CLICK TO CONTINUE OVERLAY */
+    #clickOverlay {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      background: rgba(0, 0, 0, 0.92);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-#clickContinueButton {
-  width: min(80vw, 600px);
-  height: min(40vh, 300px);
-  background: #dc2626;
-  color: white;
-  border: none;
-  border-radius: 20px;
-  font-size: clamp(2rem, 5vw, 4rem);
-  font-weight: bold;
-  cursor: pointer;
-  box-shadow: 0 0 40px rgba(220, 38, 38, 0.6);
-}
+    #clickContinueButton {
+      width: min(80vw, 600px);
+      height: min(40vh, 300px);
+      background: #dc2626;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      font-size: clamp(2rem, 5vw, 4rem);
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 0 40px rgba(220, 38, 38, 0.6);
+    }
 
-#clickContinueButton:hover {
-  background: #b91c1c;
-}
+    #clickContinueButton:hover {
+      background: #b91c1c;
+    }
 
-#clickContinueButton:active {
-  background: #991b1b;
-}
-    /* ==================================================
-       LAYOUT & HOME PAGE SPECIFIC
-       ================================================== */
-    
+    #clickContinueButton:active {
+      background: #991b1b;
+    }
+
+    /* LAYOUT & HOME PAGE SPECIFIC */
     .main-content-wrapper {
       display: flex;
       gap: 2rem;
@@ -86,11 +82,11 @@
     }
 
     .left-column {
-      flex: 0 0 65%; /* Take 65% width */
+      flex: 0 0 65%;
     }
 
     .right-column {
-      flex: 0 0 calc(35% - 2rem); /* Take remaining 35% minus gap */
+      flex: 0 0 calc(35% - 2rem);
       background: #1f2937;
       padding: 1.5rem;
       border-radius: 12px;
@@ -119,7 +115,7 @@
 
     .status {
       margin-top: 1rem;
-      color: #a78bfa; /* Slightly purpler to stand out as status */
+      color: #a78bfa;
       min-height: 24px;
       font-weight: bold;
     }
@@ -131,10 +127,7 @@
       margin-top: 1rem;
     }
 
-    /* ==================================================
-       SHARED COMPONENTS (Buttons, Cards, Items)
-       ================================================== */
-
+    /* SHARED COMPONENTS */
     .audio-btn {
       padding: 14px;
       border: none;
@@ -233,7 +226,6 @@
       border-left: 4px solid transparent;
     }
 
-    /* Highlight next upcoming schedule vaguely */
     .schedule-item.upcoming {
       border-left-color: #60a5fa;
     }
@@ -253,32 +245,24 @@
       font-size: 0.8rem;
     }
 
-    /* Helper for empty lists */
     .no-schedules {
       color: #9ca3af;
       font-style: italic;
       text-align: center;
       margin-top: 2rem;
     }
-
   </style>
 </head>
 <script src="schedules.js"></script>
 <body>
-<!-- CLICK TO CONTINUE OVERLAY -->
-<div id="clickOverlay">
-  <button id="clickContinueButton">
-    Click anywhere to continue
-  </button>
-</div>
 
-<script>
-  const clickOverlay = document.getElementById("clickOverlay");
+  <!-- CLICK TO CONTINUE OVERLAY -->
+  <div id="clickOverlay">
+    <button id="clickContinueButton">
+      Click anywhere to continue
+    </button>
+  </div>
 
-  clickOverlay.addEventListener("click", () => {
-    clickOverlay.remove();
-  });
-</script>
   <!-- NAVIGATION -->
   <div class="navbar">
     <button class="nav-btn" onclick="showPage('homePage')">
@@ -292,10 +276,9 @@
 
   <!-- HOME PAGE -->
   <div id="homePage" class="page active">
-    
     <div class="main-content-wrapper">
       
-      <!-- LEFT COLUMN: Clock & Buttons (65%) -->
+      <!-- LEFT COLUMN -->
       <div class="left-column">
         <h1>Audio Scheduler</h1>
 
@@ -323,26 +306,21 @@
         </button>
       </div>
 
-      <!-- RIGHT COLUMN: Today's Schedule (35%) -->
+      <!-- RIGHT COLUMN -->
       <div class="right-column">
         <h2 class="column-header">Today's Schedule</h2>
-        <div class="schedule-list" id="homeScheduleList">
-          <!-- Populated by JS -->
-        </div>
+        <div class="schedule-list" id="homeScheduleList"></div>
       </div>
 
-    </div><!-- end main-content-wrapper -->
-
+    </div>
   </div>
 
   <!-- CONFIG PAGE -->
   <div id="configPage" class="page">
-
     <h1>Schedule Configuration</h1><br>
     <h3>(AdHoc Audio, Will Only Last Until Page Refresh.)</h3>
 
     <div class="config-card">
-
       <label for="scheduleTime">Time</label>
       <input type="time" id="scheduleTime" onclick="this.showPicker()" />
 
@@ -376,20 +354,32 @@
       <button class="save-btn" onclick="saveSchedule()">
         Save Schedule
       </button>
-
     </div>
 
     <h2>Master Schedule List (All Days)</h2>
     <div class="schedule-list" id="configScheduleList"></div>
-
   </div>
 
   <script>
+    // ==================================================
+    // BACKGROUND KEEP-ALIVE AUDIO ENGINE
+    // ==================================================
+    const keepAliveAudio = new Audio("sounds/silence-60sec.mp3");
+    keepAliveAudio.loop = true;
+
+    const clickOverlay = document.getElementById("clickOverlay");
+    clickOverlay.addEventListener("click", () => {
+      keepAliveAudio.play().then(() => {
+        console.log("Keep-alive silent audio loop active.");
+      }).catch(err => {
+        console.warn("Keep-alive playback blocked:", err);
+      });
+      clickOverlay.remove();
+    });
 
     // ==================================================
     // AUDIO FILES & CONSTANTS
     // ==================================================
-
     const audioFiles = [
       { name: "Deborah: Closing in 25", url: "sounds/Deborah 25Min.mp3" },
       { name: "Deborah: Closing in 10", url: "sounds/Deborah 10Min.mp3" },
@@ -407,7 +397,6 @@
     // ==================================================
     // PAGE NAVIGATION
     // ==================================================
-
     function showPage(pageId) {
       document.querySelectorAll(".page").forEach(page => {
         page.classList.remove("active");
@@ -418,45 +407,33 @@
     // ==================================================
     // CLOCK & MAIN LOOP
     // ==================================================
-
     const clockEl = document.getElementById("clock");
     const dayDisplayEl = document.getElementById("dayDisplay");
     const statusEl = document.getElementById("status");
 
     function updateClock() {
-    let currentAudio = null;
       const now = new Date();
-      currentAudio = new Audio("sounds/silence.mp3");
-      currentAudio.play();
-      console.log("AudioPlayed");
       const hours = String(now.getHours()).padStart(2, "0");
       const minutes = String(now.getMinutes()).padStart(2, "0");
       const seconds = String(now.getSeconds()).padStart(2, "0");
 
-      const currentTimeString = `${hours}:${minutes}`; // "HH:MM"
+      const currentTimeString = `${hours}:${minutes}`;
       const displayTimeString = `${hours}:${minutes}:${seconds}`;
-      const currentDayShort = DAYS_SHORT[now.getDay()]; // "Mon"
+      const currentDayShort = DAYS_SHORT[now.getDay()];
 
-      // 1. Update Display
       clockEl.textContent = displayTimeString;
       dayDisplayEl.textContent = now.toLocaleDateString('en-US', { weekday: 'long' });
 
-      // 2. Core Logic: Check if something needs to play
       checkSchedules(currentTimeString, currentDayShort);
-
-      // 3. Display Logic: Update the Home Page schedule list (so it stays current if day changes)
       renderHomePageSchedule(currentDayShort, currentTimeString);
     }
 
-    // Start the loop
     setInterval(updateClock, 1000);
-    updateClock(); // Run immediately
+    updateClock();
 
     // ==================================================
     // MANUAL UI POPULATION
     // ==================================================
-
-    // 1. Manual Buttons
     const buttonGrid = document.getElementById("buttonGrid");
     audioFiles.forEach(audioData => {
       const button = document.createElement("button");
@@ -468,7 +445,6 @@
       buttonGrid.appendChild(button);
     });
 
-    // 2. Config Audio Select
     const audioSelect = document.getElementById("audioSelect");
     audioFiles.forEach((audio, index) => {
       const option = document.createElement("option");
@@ -480,7 +456,6 @@
     // ==================================================
     // AUDIO PLAYBACK ENGINE
     // ==================================================
-
     let currentAudio = null;
     let currentAudioLabel = null;
 
@@ -496,12 +471,11 @@
 
     async function playAudio(url, label) {
       try {
-        // Prevent interrupting the same file if it's already playing
         if (currentAudio && currentAudioLabel === label && !currentAudio.paused) {
           return;
         }
 
-        stopAudio(); // Stop whatever is currently playing
+        stopAudio();
 
         currentAudio = new Audio(url);
         currentAudioLabel = label;
@@ -523,55 +497,37 @@
       }
     }
 
-// ==================================================
-// SCHEDULE CORE LOGIC
-// ==================================================
+    // ==================================================
+    // SCHEDULE CORE LOGIC
+    // ==================================================
+    function checkSchedules(currentTime, currentDay) {
+      const now = new Date();
 
-function checkSchedules(currentTime, currentDay) {
-  const now = new Date();
+      schedules.forEach(schedule => {
+        if (!schedule.days.includes(currentDay)) {
+          return;
+        }
 
-  schedules.forEach(schedule => {
+        const scheduledTime = new Date(now);
+        const [hours, minutes] = schedule.time.split(":").map(Number);
+        scheduledTime.setHours(hours, minutes, 0, 0);
 
-    // Only consider schedules that run today
-    if (!schedule.days.includes(currentDay)) {
-      return;
+        const occurrenceId = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}_${schedule.time}`;
+
+        if (schedule.lastPlayedOccurrence === occurrenceId) {
+          return;
+        }
+
+        if (now >= scheduledTime) {
+          playAudio(schedule.audio.url, schedule.audio.name);
+          schedule.lastPlayedOccurrence = occurrenceId;
+        }
+      });
     }
 
-    // Build the scheduled time for today
-    const scheduledTime = new Date(now);
-    const [hours, minutes] = schedule.time.split(":").map(Number);
-
-    scheduledTime.setHours(hours, minutes, 0, 0);
-
-    // Unique ID for this specific occurrence
-    // Example: "2026-08-27_10:00"
-    const occurrenceId =
-      `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}_${schedule.time}`;
-
-    // Already played this occurrence
-    if (schedule.lastPlayedOccurrence === occurrenceId) {
-      return;
-    }
-
-    // If the scheduled time has arrived, play it.
-    //
-    // This is the important change:
-    // We no longer require currentTime === schedule.time.
-    //
-    // If Chrome delays the background tab and this function runs
-    // at 10:00:20 instead of 10:00:00, the schedule will still play.
-    if (now >= scheduledTime) {
-
-      playAudio(schedule.audio.url, schedule.audio.name);
-
-      // Remember that this occurrence has already played
-      schedule.lastPlayedOccurrence = occurrenceId;
-    }
-  });
-}    // ==================================================
+    // ==================================================
     // CONFIGURATION PAGE ACTIONS & RENDERING
     // ==================================================
-
     function saveSchedule() {
       const timeInput = document.getElementById("scheduleTime");
       const time = timeInput.value;
@@ -597,20 +553,17 @@ function checkSchedules(currentTime, currentDay) {
         time: time,
         days: selectedDays,
         audio: selectedAudio,
-        played: false // internal flag
+        played: false
       });
 
-      // Sort schedules by time automatically
       schedules.sort((a, b) => a.time.localeCompare(b.time));
 
-      // Clear UI
       daysPicker.querySelectorAll(".day-checkbox").forEach(cb => cb.checked = false);
       timeInput.value = "";
 
       renderConfigSchedules();
     }
 
-    // Renders EVERYTHING (Config page)
     function renderConfigSchedules() {
       const scheduleList = document.getElementById("configScheduleList");
       scheduleList.innerHTML = "";
@@ -639,17 +592,10 @@ function checkSchedules(currentTime, currentDay) {
     // ==================================================
     // HOME PAGE DISPLAY LOGIC
     // ==================================================
-
-    // Renders ONLY today's schedules (Home page right column)
     function renderHomePageSchedule(currentDayShort, currentTime) {
       const homeList = document.getElementById("homeScheduleList");
-      
-      // Filter the master list for things happening TODAY
       const todaysSchedules = schedules.filter(s => s.days.includes(currentDayShort));
 
-      // Quick performance optimization: don't redraw if nothing changed (vaguely)
-      // This function runs every second. We only need to rebuild the HTML if the count changed,
-      // or if we cross a minute boundary where an item might change visual state (e.g., 'upcoming')
       if (homeList.dataset.lastCount == todaysSchedules.length && homeList.dataset.lastTime === currentTime) {
          return; 
       }
@@ -665,10 +611,8 @@ function checkSchedules(currentTime, currentDay) {
 
       todaysSchedules.forEach((schedule) => {
         const div = document.createElement("div");
-        // We use a simpler style for the home page sidebar
         div.className = "schedule-item"; 
-        
-        // Vaguely highlight upcoming ones (after current time)
+
         if (schedule.time > currentTime) {
             div.classList.add('upcoming');
         }
@@ -682,7 +626,6 @@ function checkSchedules(currentTime, currentDay) {
         homeList.appendChild(div);
       });
     }
-
   </script>
 </body>
 </html>
