@@ -220,7 +220,7 @@
       margin-top: 2rem;
     }
   </style>
-  <meta http-equiv="refresh" content="30">
+  <meta http-equiv="refresh" content="681">
 </head>
 <script src="schedules.js"></script>
 <body>
@@ -325,19 +325,8 @@
     // ==================================================
     // BACKGROUND KEEP-ALIVE AUDIO ENGINE
     // ==================================================
-    const keepAliveAudio = new Audio("sounds/silence-60sec.mp3");
+    const keepAliveAudio = new Audio("sounds/silence.mp3");
     keepAliveAudio.loop = true;
-
-    const clickOverlay = document.getElementById("clickOverlay");
-    clickOverlay.addEventListener("click", () => {
-      keepAliveAudio.play().then(() => {
-        console.log("Keep-alive silent audio loop active.");
-      }).catch(err => {
-        console.warn("Keep-alive playback blocked:", err);
-      });
-      clickOverlay.remove();
-    });
-
     // ==================================================
     // AUDIO FILES & CONSTANTS
     // ==================================================
